@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>德文身體部位單字測驗</title>
+    <style>
+        :root {
+            --primary: #4a5568;
+            --success: #48bb78;
+            --error: #f56565;
+            --bg: #f7fafc;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg);
+            color: #2d3748;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 500px;
+            text-align: center;
+        }
+        h1 { font-size: 24px; margin-bottom: 20px; color: #1a202c; }
+        .tab-buttons {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 25px;
+        }
+        .tab-btn {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            background: #e2e8f0;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+        }
+        .tab-btn.active {
+            background: var(--primary);
+            color: white;
+        }
+        .panel { display: none; }
+        .panel.active { display: block; }
+        
+        /* 背單字模式 */
+        .card {
+            background: #edf2f7;
+            padding: 30px;
+            border-radius: 8px;
+            font-size: 28px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            cursor: pointer;
+            min-height: 80px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .hint { font-size: 14px; color: #718096; margin-top: 5px; }
+
+        /* 測驗模式 */
+        .question { font-size: 22px; font-weight: bold; margin-bottom: 20px; }
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .option-btn {
+            padding: 14px;
+            font-size: 18px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            background: white;
+            cursor: pointer;
+            text-align: left;
+            transition: all 0.2s;
+        }
+        .option-btn:hover { background: #f7fafc; border-color: #cbd5e0; }
+        .option-btn.correct { background: #c6f6d5; border-color: var(--success); color: #22543d; }
+        .option-btn.wrong { background: #fed7d7; border-color: var(--error); color: #742a2a; }
+        
+        .nav-btn {
+            margin-top: 20px;
+            padding: 10px 20px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .score { font-size: 16px; color: #4a5568; margin-top: 15px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>🇩🇪 德文身體部位學習機</h1>
+    
+    <div class="tab-buttons">
+        <button class="tab-btn active" onclick="switchTab('study')">📖 背單字</button>
+        <button class="tab-btn" onclick="switchTab('quiz')">✍️ 測驗中</button>
+    </div>
+
+    <!-- 背單字模式 -->
+    <div id="study-panel" class="panel active">
+        <div class="card" id="word-card" onclick="flipCard()">點擊翻面</div>
+        <div class="hint" id="card-hint">顯示：德文 (點擊卡片切換中文)</div>
+        <button class="nav-btn" onclick="nextStudyCard()">下一張 ➡️</button>
+    </div>
+
+    <!-- 測驗模式 -->
+    <div id="quiz-panel" class="panel">
+        <div id="quiz-container">
+            <div class="question" id="quiz-question">問題載入中...</div>
+            <div class="options" id="quiz-options"></div>
+            <div class="score" id="quiz-score">目前得分: 0 / 0</div>
+            <button class="nav-btn" id="next-quiz-btn" onclick="nextQuizQuestion()" style="display:none;">下一題 ➡️</button>
+        </div>
+    </div>
+</div>
+
+<script>
+// 內建您詢問的身體部位單字庫
+const wordBank = [
+    { de: "der Kopf", zh: "頭" }, { de: "das Haar", zh: "頭髮" }, { de: "das Gesicht", zh: "臉" },
+    { de: "das Auge", zh: "眼睛" }, { de: "das Ohr", zh: "耳朵" }, { de: "die Nase", zh: "鼻子" },
+    { de: "der Mund", zh: "嘴巴" }, { de: "der Zahn", zh: "牙齒" }, { de: "der Hals", zh: "脖子 / 喉嚨" },
+    { de: "die Schulter", zh: "肩膀" }, { de: "die Brust", zh: "胸部" }, { de: "der Rücken", zh: "背部" },
+    { de: "der Bauch", zh: "肚子 / 胃" }, { de: "der Arm", zh: "手臂" }, { de: "die Überweisung", zh: "轉診/轉帳" },
+    { de: "der Abschluss", zh: "結業" }, { de: "die Hand", zh: "手" }, { de: "der Finger", zh: "手指" },
+    { de: "der Daumen", zh: "大拇指" }, { de: "das Bein", zh: "腿" }, { de: "die Wahrheit", zh: "真相" },
+    { de: "das Knie", zh: "膝蓋" }, { de: "die Versichertenkarte", zh: "健保卡" }, { de: "die Entspannung", zh: "放鬆" },
+    { de: "der Fuß", zh: "腳" }, { de: "die Abschlussprüfung", zh: "期末考/畢業考" }, { de: "auswählen", zh: "選擇" }
+];
+
+let currentStudyIndex = 0;
+let isFlipped = false;
+
+let quizCurrentIndex = 0;
+let quizScore = 0;
+let quizTotal = 0;
+let quizWords = [];
+let canAnswer = true;
+
+// 切換分頁
+function switchTab(tab) {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    
+    if (tab === 'study') {
+        document.querySelectorAll('.tab-btn')[0].classList.add('active');
+        document.getElementById('study-panel').classList.add('active');
+        initStudy();
+    } else {
+        document.querySelectorAll('.tab-btn')[1].classList.add('active');
+        document.getElementById('quiz-panel').classList.add('active');
+        initQuiz();
+    }
+}
+
+// 背單字邏輯
+function initStudy() {
+    isFlipped = false;
+    updateStudyCard();
+}
+
+function updateStudyCard() {
+    const card = document.getElementById('word-card');
+    const hint = document.getElementById('card-hint');
+    const word = wordBank[currentStudyIndex];
+    if (!isFlipped) {
+        card.innerText = word.de;
+        card.style.background = "#edf2f7";
+        hint.innerText = "顯示：德文 (點擊卡片切換中文)";
+    } else {
+        card.innerText = word.zh;
+        card.style.background = "#feebc8";
+        hint.innerText = "顯示：中文 (點擊卡片切換德文)";
+    }
+}
+
+function flipCard() {
+    isFlipped = !isFlipped;
+    updateStudyCard();
+}
+
+function nextStudyCard() {
+    currentStudyIndex = (currentStudyIndex + 1) % wordBank.length;
+    isFlipped = false;
+    updateStudyCard();
+}
+
+// 測驗模式邏輯 (隨機出題、隨機選項)
+function initQuiz() {
+    quizWords = [...wordBank].sort(() => 0.5 - Math.random()); // 洗牌單字
+    quizCurrentIndex = 0;
+    quizScore = 0;
+    quizTotal = 0;
+    loadQuizQuestion();
+}
+
+function loadQuizQuestion() {
+    if (quizCurrentIndex >= quizWords.length) {
+        document.getElementById('quiz-container').innerHTML = `<h2>🎉 測驗完成！</h2><p style="font-size:20px;">您的最終得分：${quizScore} / ${quizTotal}</p><button class="nav-btn" onclick="initQuiz()">再測驗一次</button>`;
+        return;
+    }
+    
+    canAnswer = true;
+    document.getElementById('next-quiz-btn').style.display = 'none';
+    
+    const currentWord = quizWords[quizCurrentIndex];
+    document.getElementById('quiz-question').innerText = `「${currentWord.zh}」的德文是什麼？`;
+    
+    // 產生四個選項（1個正解 + 3個隨機誤導項）
+    let options = [currentWord.de];
+    let pool = wordBank.filter(w => w.de !== currentWord.de);
+    pool.sort(() => 0.5 - Math.random());
+    for(let i=0; i<3; i++) {
+        options.push(pool[i].de);
+    }
+    options.sort(() => 0.5 - Math.random()); // 打亂選項順序
+    
+    const optionsDiv = document.getElementById('quiz-options');
+    optionsDiv.innerHTML = '';
+    
+    options.forEach(opt => {
+        const btn = document.createElement('button');
+        btn.className = 'option-btn';
+        btn.innerText = opt;
+        btn.onclick = () => checkAnswer(btn, opt, currentWord.de);
+        optionsDiv.appendChild(btn);
+    });
+    
+    updateScoreBoard();
+}
+
+function checkAnswer(selectedBtn, selectedOpt, correctOpt) {
+    if (!canAnswer) return;
+    canAnswer = false;
+    
+    quizTotal++;
+    const buttons = document.querySelectorAll('.option-btn');
+    
+    if (selectedOpt === correctOpt) {
+        selectedBtn.classList.add('correct');
+        quizScore++;
+    } else {
+        selectedBtn.classList.add('wrong');
+        // 顯示正確答案
+        buttons.forEach(btn => {
+            if (btn.innerText === correctOpt) btn.classList.add('correct');
+        });
+    }
+    
+    updateScoreBoard();
+    document.getElementById('next-quiz-btn').style.display = 'inline-block';
+}
+
+function updateScoreBoard() {
+    document.getElementById('quiz-score').innerText = `目前得分: ${quizScore} / ${quizTotal}`;
+}
+
+function nextQuizQuestion() {
+    quizCurrentIndex++;
+    loadQuizQuestion();
+}
+
+// 初始化啟動
+initStudy();
+</script>
+
+</body>
+</html>
