@@ -119,6 +119,8 @@
         <div class="card" id="word-card" onclick="flipCard()">點擊翻面</div>
         <div class="hint" id="card-hint">顯示：德文 (點擊卡片切換中文)</div>
         <button class="nav-btn" onclick="nextStudyCard()">下一張 ➡️</button>
+        <button class="nav-btn" onclick="nextStudyCard()" style="margin-top:0;">下一張 ➡️</button>
+
     </div>
 
     <!-- 測驗模式 -->
@@ -209,7 +211,11 @@ function nextStudyCard() {
     isFlipped = false;
     updateStudyCard();
 }
-
+function prevStudyCard() {
+    currentStudyIndex = (currentStudyIndex - 1 + wordBank.length) % wordBank.length;
+    isFlipped = false;
+    updateStudyCard();
+}
 // 測驗模式邏輯 (隨機出題、隨機選項)
 function initQuiz() {
     quizWords = [...wordBank].sort(() => 0.5 - Math.random()); // 洗牌單字
