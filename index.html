@@ -118,9 +118,10 @@
     <div id="study-panel" class="panel active">
         <div class="card" id="word-card" onclick="flipCard()">點擊翻面</div>
         <div class="hint" id="card-hint">顯示：德文 (點擊卡片切換中文)</div>
-        <button class="nav-btn" onclick="nextStudyCard()">下一張 ➡️</button>
-        <button class="nav-btn" onclick="nextStudyCard()" style="margin-top:0;">下一張 ➡️</button>
-
+        <div style="display: flex; gap: 10px; justify-content: center; margin-top: 20px;">
+            <button class="nav-btn" onclick="prevStudyCard()" style="margin-top:0;">⬅️ 上一張</button>
+            <button class="nav-btn" onclick="nextStudyCard()" style="margin-top:0;">下一張 ➡️</button>
+        </div>
     </div>
 
     <!-- 測驗模式 -->
